@@ -11,10 +11,12 @@ import java.util.List;
 import java.util.Map;
 
 public class SimulationManager {
-    Cpu cpu;
-    int cpuTime;
-    Map<Task, Integer> WTMap;
-    Map<Task, Integer> TATMap;
+    private final Cpu cpu;
+    private int cpuTime;
+    private Map<Task, Integer> WTMap;
+    private Map<Task, Integer> TATMap;
+    private List<List<Task>> finalReadyQueue;
+    private List<Task> finalCpu;
 
     public SimulationManager() {
         this.cpu = new Cpu();
@@ -32,12 +34,15 @@ public class SimulationManager {
 
         for (int i = 0; i < simulationTime; i++) {
             for (Task task : tasks) {
-                if (i == task.offset() || ((i - task.offset()) % task.period_time()) == 0) {
+                if (i == task.getOffset() || ((i - task.getOffset()) % task.getPeriod_time()) == 0) {
                     readyQueue.add(task);
                 }
             }
 
             isComputing = nonPreemptiveStep(readyQueue, isComputing);
+
+            finalReadyQueue.add(new ArrayList<>(readyQueue));
+            finalCpu.add(cpu.getTaskInCpu());
 
             System.out.println("time: " + (i) + ", task In CPU: " + (tasks.indexOf(cpu.getTaskInCpu()) + 1));
         }
@@ -45,8 +50,7 @@ public class SimulationManager {
         return logInfo(specs, tasks);
     }
 
-    public OutputLog sjf(SimulationSpecs specs) {
-
+    public OutputLog roundRobin(SimulationSpecs specs) {
         int simulationTime = specs.simulation_time();
         boolean isComputing = false;
 
@@ -57,23 +61,16 @@ public class SimulationManager {
 
         for (int i = 0; i < simulationTime; i++) {
             for (Task task : tasks) {
-                if (i == task.offset() || ((i - task.offset()) % task.period_time()) == 0) {
-                    if (readyQueue.isEmpty()) {
-                        readyQueue.add(task);
-                    } else {
-                        for (int j = 0; j < readyQueue.size(); j++) {
-                            if (task.computation_time() < readyQueue.get(j).computation_time()) {
-                                readyQueue.add(readyQueue.indexOf(readyQueue.get(j)), task);
-                                break;
-                            }
-                        }
-                    }
+                if (i == task.getOffset() || (i - task.getOffset() % task.getPeriod_time()) == 0) {
+                    readyQueue.add(task);
                 }
             }
 
-            isComputing = nonPreemptiveStep(readyQueue, isComputing);
-
+            isComputing = preemptiveStep(readyQueue, isComputing);
             System.out.println("time: " + (i) + ", task In CPU: " + (tasks.indexOf(cpu.getTaskInCpu()) + 1));
+
+            finalReadyQueue.add(new ArrayList<>(readyQueue));
+            finalCpu.add(cpu.getTaskInCpu());
         }
 
         return logInfo(specs, tasks);
@@ -83,6 +80,9 @@ public class SimulationManager {
         cpuTime = 0;
         WTMap = new HashMap<>();
         TATMap = new HashMap<>();
+
+        finalReadyQueue = new ArrayList<>();
+        finalCpu = new ArrayList<>();
 
         for (Task task : tasks) {
             WTMap.put(task, 0);
@@ -96,11 +96,38 @@ public class SimulationManager {
 
             if (!isComputing) {
                 cpu.setTaskInCpu(null);
-                isComputing = cpu.nonPreeptiveCompute(readyQueue.getFirst());
+                isComputing = cpu.nonPreemptiveCompute(readyQueue.getFirst());
                 readyQueue.removeFirst();
                 cpuTime++;
             } else {
-                isComputing = cpu.nonPreeptiveCompute(cpu.getTaskInCpu());
+                isComputing = cpu.nonPreemptiveCompute(cpu.getTaskInCpu());
+                cpuTime++;
+                TATMap.replace(cpu.getTaskInCpu(), TATMap.get(cpu.getTaskInCpu()) + 1);
+            }
+        } else {
+            cpu.setTaskInCpu(null);
+        }
+
+        for (Task task : readyQueue) {
+            WTMap.replace(task, WTMap.get(task) + 1);
+        }
+
+        return isComputing;
+    }
+
+    public boolean preemptiveStep(List<Task> readyQueue, boolean isComputing) {
+        if (!readyQueue.isEmpty()) {
+
+            if (!isComputing) {
+                if (cpu.getTaskInCpu() != null && cpu.getTaskInCpu().getComputation_time() != 0) {
+                    readyQueue.add(cpu.getTaskInCpu());
+                }
+
+                isComputing = cpu.preemptiveCompute(readyQueue.getFirst());
+                readyQueue.removeFirst();
+                cpuTime++;
+            } else {
+                isComputing = cpu.preemptiveCompute(cpu.getTaskInCpu());
                 cpuTime++;
                 TATMap.replace(cpu.getTaskInCpu(), TATMap.get(cpu.getTaskInCpu()) + 1);
             }
@@ -125,11 +152,12 @@ public class SimulationManager {
         for (Task task : tasks) {
             waitingTimeSum += WTMap.get(task);
             turnAroundTimeSum += (TATMap.get(task) + 1 + WTMap.get(task));
+            System.out.println(TATMap.get(task) + 1 + WTMap.get(task));
         }
 
         averageWaitingTime = waitingTimeSum / tasks.size();
         averageTurnAroundTime = turnAroundTimeSum / tasks.size();
 
-        return new OutputLog(utilization, productivity, averageWaitingTime, averageTurnAroundTime);
+        return new OutputLog(utilization, productivity, averageWaitingTime, averageTurnAroundTime, finalReadyQueue, finalCpu);
     }
 }

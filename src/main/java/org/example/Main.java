@@ -12,10 +12,11 @@ public class Main {
 
         SimulationSpecs simulation1 = jsonManager.ReadJsonFile("C:\\Users\\pozzo\\Documents\\IntelliJ projects\\ProcessScheduler\\src\\main\\java\\org\\example\\exemplo_sched.json");
 
-        OutputLog outputLog = simulationManager.fcfs(simulation1);
-
-        //OutputLog outputLog = simulationManager.sjf(simulation1);
+        //OutputLog outputLog = simulationManager.fcfs(simulation1);
+        OutputLog outputLog = simulationManager.roundRobin(simulation1);
 
         System.out.println(outputLog);
+
+        //jsonManager.WriteJsonLog(outputLog);
     }
 }
