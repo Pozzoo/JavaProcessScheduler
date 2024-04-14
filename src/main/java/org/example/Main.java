@@ -10,11 +10,9 @@ public class Main {
         JsonManager jsonManager = new JsonManager();
         SimulationManager simulationManager = new SimulationManager();
 
-        SimulationSpecs simulation1 = jsonManager.ReadJsonFile("C:\\Users\\pozzo\\Documents\\IntelliJ projects\\ProcessScheduler\\src\\main\\java\\org\\example\\exemplo_sched.json");
+        SimulationSpecs simulation = jsonManager.ReadJsonFile("C:\\Users\\pozzo\\Documents\\IntelliJ projects\\ProcessScheduler\\src\\main\\java\\org\\example\\exemplo_sched.json");
 
-        //OutputLog outputLog = simulationManager.fcfs(simulation1);
-        OutputLog outputLog = simulationManager.roundRobin(simulation1);
-
+        OutputLog outputLog = simulationManager.startSimulation(simulation);
         System.out.println(outputLog);
 
         //jsonManager.WriteJsonLog(outputLog);

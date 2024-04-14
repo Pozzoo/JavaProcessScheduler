@@ -16,7 +16,13 @@ public class JsonManager {
     public SimulationSpecs ReadJsonFile(String filePath) {
 
         try(BufferedReader br = new BufferedReader(new FileReader(filePath))) {
-            return gson.fromJson(br, SimulationSpecs.class);
+            SimulationSpecs specs = gson.fromJson(br, SimulationSpecs.class);
+
+            for (int i = 0; i < specs.tasks_number(); i++) {
+                specs.tasks().get(i).setIndex(i);
+            }
+
+            return specs;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

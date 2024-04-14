@@ -4,20 +4,14 @@ import org.example.data.Task;
 
 public class Cpu {
     private int computationTime = 0;
-    private int quantum;
+    private int quantum = 0;
     private Task taskInCpu;
 
-    public Boolean nonPreemptiveCompute(Task task) {
-        if (computationTime == 0) {
-            computationTime = task.getComputation_time() - 1;
-            taskInCpu = task;
-        } else {
-            computationTime -= 1;
-        }
-        return computationTime > 0;
-    }
+    public boolean compute(Task task, boolean hasQuantum) {
 
-    public boolean preemptiveCompute(Task task) {
+        if (!hasQuantum) {
+            quantum = 2;
+        }
 
         if (computationTime == 0 || quantum == 0) {
             task.setComputation_time(task.getComputation_time() - 1);
@@ -29,7 +23,15 @@ public class Cpu {
             computationTime -= 1;
             quantum -= 1;
         }
-        return computationTime > 0 && quantum > 0;
+
+        System.out.println("    task In CPU: " + taskInCpu.getIndex());
+
+        if (computationTime > 0 && quantum > 0) {
+            return true;
+        } else {
+            taskInCpu = null;
+            return false;
+        }
     }
 
     public Task getTaskInCpu() {

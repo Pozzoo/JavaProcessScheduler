@@ -6,6 +6,7 @@ public class Task {
     private int period_time;
     private int quantum;
     private int deadline;
+    private int index;
 
     public Task(int offset, int computation_time, int period_time, int quantum, int deadline) {
         this.offset = offset;
@@ -53,6 +54,14 @@ public class Task {
 
     public void setDeadline(int deadline) {
         this.deadline = deadline;
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public void setIndex(int index) {
+        this.index = index;
     }
 
     @Override
