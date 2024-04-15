@@ -10,9 +10,10 @@ public class Main {
         JsonManager jsonManager = new JsonManager();
         SimulationManager simulationManager = new SimulationManager();
 
-        SimulationSpecs simulation = jsonManager.ReadJsonFile("C:\\Users\\pozzo\\Documents\\IntelliJ projects\\ProcessScheduler\\src\\main\\java\\org\\example\\exemplo_sched.json");
+        SimulationSpecs simulation = jsonManager.ReadJsonFile("src/main/java/org/example/exemplo_sched.json");
+        SimulationSpecs simulation1 = jsonManager.ReadJsonFile("src/main/java/org/example/exemplo_rm.json");
 
-        OutputLog outputLog = simulationManager.startSimulation(simulation);
+        OutputLog outputLog = simulationManager.startSimulation(simulation1);
         System.out.println(outputLog);
 
         //jsonManager.WriteJsonLog(outputLog);
