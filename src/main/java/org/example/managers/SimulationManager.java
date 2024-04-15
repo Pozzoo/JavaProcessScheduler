@@ -157,14 +157,14 @@ public class SimulationManager {
                     readyQueue.removeFirst();
                 } else {
                     System.out.println("    task In CPU: null");
+                    GraphicManager.addPoint(time + 1, -1);
                 }
             } else {
                 isComputing = cpu.compute(cpu.getTaskInCpu(), hasQuantum, false);
             }
+
             cpuTime++;
-            GraphicManager.addPoint(time, cpu.getTaskInCpu().getIndex());
-        } else {
-            System.out.println("    task In CPU: null");
+            GraphicManager.addPoint(time + 1, cpu.getTaskInCpu().getIndex());
         }
 
         if (cpu.getTaskInCpu() != null) {

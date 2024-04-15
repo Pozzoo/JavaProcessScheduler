@@ -28,8 +28,6 @@ public class Cpu {
 
         if (taskInCpu != null) {
             System.out.println("    task In CPU: " + (taskInCpu.getIndex() + 1));
-        } else {
-            System.out.println("    task In CPU: null");
         }
 
         return computationTime > 0 && quantum > 0;

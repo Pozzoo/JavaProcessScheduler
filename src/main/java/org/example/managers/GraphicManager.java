@@ -16,8 +16,10 @@ public class GraphicManager {
     }
 
     public static void addPoint(int time, int processNumber) {
-        for (int i = lastTime; i < time * 4; i++) {
-            canvas[processNumber][i] = "+";
+        if (processNumber != -1) {
+            for (int i = lastTime; i < time * 4; i++) {
+                canvas[processNumber][i] = "+";
+            }
         }
 
         lastTime = time * 4;
