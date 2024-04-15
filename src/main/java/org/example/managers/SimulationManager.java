@@ -13,8 +13,6 @@ public class SimulationManager {
     private int cpuTime;
     private int[] waitingTime;
     private int[] turnAroundTime;
-    private List<List<Task>> finalReadyQueue;
-    private List<Task> finalCpu;
 
     public SimulationManager() {
         this.cpu = new Cpu();
@@ -50,8 +48,6 @@ public class SimulationManager {
         waitingTime = new int[tasks.size()];
         turnAroundTime = new int[tasks.size()];
 
-        finalReadyQueue = new ArrayList<>();
-        finalCpu = new ArrayList<>();
 
         for (int i = 0; i < tasks.size(); i++) {
             waitingTime[i] = 0;
@@ -68,10 +64,7 @@ public class SimulationManager {
             }
 
             System.out.println("time: " + i);
-            isComputing = step(readyQueue, isComputing, false, false);
-
-            finalReadyQueue.add(new ArrayList<>(readyQueue));
-            finalCpu.add(cpu.getTaskInCpu());
+            isComputing = step(readyQueue, isComputing, false, false, i);
 
             System.out.println("---");
         }
@@ -88,10 +81,7 @@ public class SimulationManager {
             }
 
             System.out.println("time: " + i);
-            isComputing = step(readyQueue, isComputing, true, false);
-
-            finalReadyQueue.add(new ArrayList<>(readyQueue));
-            finalCpu.add(cpu.getTaskInCpu());
+            isComputing = step(readyQueue, isComputing, true, false, i);
         }
 
         return logInfo(specs, tasks);
@@ -144,7 +134,7 @@ public class SimulationManager {
                 }
 
                 System.out.println("time: " + i);
-                isComputing = step(readyQueue, isComputing, false, preempt);
+                isComputing = step(readyQueue, isComputing, false, preempt, i);
 
             }
         }
@@ -153,20 +143,26 @@ public class SimulationManager {
         return logInfo(specs, tasks);
     }
 
-    private boolean step(List<Task> readyQueue, boolean isComputing, boolean hasQuantum, boolean preempt) {
+    private boolean step(List<Task> readyQueue, boolean isComputing, boolean hasQuantum, boolean preempt, int time) {
         if (!readyQueue.isEmpty() || cpu.getTaskInCpu() != null) {
 
             if (!isComputing || preempt) {
                 if (cpu.getTaskInCpu() != null && cpu.getTaskInCpu().getComputation_time() != 0) {
                     readyQueue.add(cpu.getTaskInCpu());
+                    cpu.setTaskInCpu(null);
                 }
 
-                isComputing = cpu.compute(readyQueue.getFirst(), hasQuantum, preempt);
-                readyQueue.removeFirst();
+                if (!readyQueue.isEmpty()) {
+                    isComputing = cpu.compute(readyQueue.getFirst(), hasQuantum, preempt);
+                    readyQueue.removeFirst();
+                } else {
+                    System.out.println("    task In CPU: null");
+                }
             } else {
                 isComputing = cpu.compute(cpu.getTaskInCpu(), hasQuantum, false);
             }
             cpuTime++;
+            GraphicManager.addPoint(time, cpu.getTaskInCpu().getIndex());
         } else {
             System.out.println("    task In CPU: null");
         }
@@ -197,6 +193,6 @@ public class SimulationManager {
         averageWaitingTime = waitingTimeSum / tasks.size();
         averageTurnAroundTime = turnAroundTimeSum / tasks.size();
 
-        return new OutputLog(utilization, productivity, averageWaitingTime, averageTurnAroundTime, finalReadyQueue, finalCpu);
+        return new OutputLog(utilization, productivity, averageWaitingTime, averageTurnAroundTime);
     }
 }

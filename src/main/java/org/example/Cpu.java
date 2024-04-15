@@ -32,12 +32,7 @@ public class Cpu {
             System.out.println("    task In CPU: null");
         }
 
-        if (computationTime > 0 && quantum > 0) {
-            return true;
-        } else {
-            taskInCpu = null;
-            return false;
-        }
+        return computationTime > 0 && quantum > 0;
     }
 
     public Task getTaskInCpu() {
