@@ -35,6 +35,8 @@ public class SimulationManager {
 
             case "ratemonotonic", "rm" -> { return  rateMonotonic(specs, simulationTime, isComputing, tasks, readyQueue); }
 
+            case "earliestdeadlinefirst", "edf" -> { return earliestDeadlineFirst(specs, simulationTime, isComputing, tasks, readyQueue); }
+
             default -> {
                 System.out.println("Escalonador Inválido");
                 return null;
@@ -64,7 +66,7 @@ public class SimulationManager {
             }
 
             System.out.println("time: " + i);
-            isComputing = step(readyQueue, isComputing, false, false, i);
+            isComputing = step(readyQueue, isComputing, false, false, false, i);
 
             System.out.println("---");
         }
@@ -81,7 +83,7 @@ public class SimulationManager {
             }
 
             System.out.println("time: " + i);
-            isComputing = step(readyQueue, isComputing, true, false, i);
+            isComputing = step(readyQueue, isComputing, true, false, false, i);
         }
 
         return logInfo(specs, tasks);
@@ -101,40 +103,16 @@ public class SimulationManager {
         } else {
 
             boolean preempt;
-            boolean addedToList;
 
             for (int i = 0; i < simulationTime; i++) {
-
                 for (Task task : tasks) {
-                    addedToList = false;
-
-                    if (i == task.getOffset() || (((i + 1) - task.getOffset()) % task.getPeriod_time()) == 0) {
-                        if (readyQueue.isEmpty()) {
-                            readyQueue.add(task.cloneTask());
-                        } else {
-                            for (int j = 0; j < readyQueue.size(); j++) {
-                                if (task.getPeriod_time() < readyQueue.get(j).getPeriod_time()) {
-                                    readyQueue.add(j, task.cloneTask());
-                                    addedToList = true;
-                                    break;
-                                }
-                            }
-
-                            if (!addedToList) {
-                                readyQueue.add(task.cloneTask());
-                            }
-                        }
-                    }
+                    addToList(readyQueue, i, task);
                 }
 
-                if (!readyQueue.isEmpty()) {
-                    preempt = cpu.getTaskInCpu() != null && readyQueue.getFirst().getPeriod_time() < cpu.getTaskInCpu().getPeriod_time();
-                } else {
-                    preempt = false;
-                }
+                preempt = !readyQueue.isEmpty() && cpu.getTaskInCpu() != null && readyQueue.getFirst().getDeadline() < cpu.getTaskInCpu().getDeadline();
 
                 System.out.println("time: " + i);
-                isComputing = step(readyQueue, isComputing, false, preempt, i);
+                isComputing = step(readyQueue, isComputing, false, preempt, true, i);
 
             }
         }
@@ -143,7 +121,59 @@ public class SimulationManager {
         return logInfo(specs, tasks);
     }
 
-    private boolean step(List<Task> readyQueue, boolean isComputing, boolean hasQuantum, boolean preempt, int time) {
+    private OutputLog earliestDeadlineFirst(SimulationSpecs specs, int simulationTime, boolean isComputing, List<Task> tasks, List<Task> readyQueue) {
+        float systemUtilization = 0;
+
+        for (Task task : tasks) {
+            systemUtilization += ((float) task.getComputation_time() / task.getPeriod_time());
+        }
+
+        if (systemUtilization > 1) {
+            System.out.println("Não Escalonavel");
+            return logInfo(specs, tasks);
+        } else {
+
+            boolean preempt;
+
+            for (int i = 0; i < simulationTime; i++) {
+                for (Task task : tasks) {
+                    addToList(readyQueue, i, task);
+                }
+
+                preempt = !readyQueue.isEmpty() && cpu.getTaskInCpu() != null && readyQueue.getFirst().getRelativeDeadline() < cpu.getTaskInCpu().getRelativeDeadline();
+
+                System.out.println("time: " + i);
+                isComputing = step(readyQueue, isComputing, false, preempt, true, i);
+            }
+        }
+
+
+        return logInfo(specs, tasks);
+    }
+
+    private void addToList(List<Task> readyQueue, int i, Task task) {
+        boolean addedToList = false;
+
+        if (i == task.getOffset() || (((i + 1) - task.getOffset()) % task.getPeriod_time()) == 0) {
+            if (readyQueue.isEmpty()) {
+                readyQueue.add(task.cloneTask());
+            } else {
+                for (int j = 0; j < readyQueue.size(); j++) {
+                    if (task.getPeriod_time() < readyQueue.get(j).getPeriod_time()) {
+                        readyQueue.add(j, task.cloneTask());
+                        addedToList = true;
+                        break;
+                    }
+                }
+
+                if (!addedToList) {
+                    readyQueue.add(task.cloneTask());
+                }
+            }
+        }
+    }
+
+    private boolean step(List<Task> readyQueue, boolean isComputing, boolean hasQuantum, boolean preempt, boolean hasDeadline, int time) {
         if (!readyQueue.isEmpty() || cpu.getTaskInCpu() != null) {
 
             if (!isComputing || preempt) {
@@ -169,10 +199,22 @@ public class SimulationManager {
 
         if (cpu.getTaskInCpu() != null) {
             turnAroundTime[cpu.getTaskInCpu().getIndex()]++;
+
+            cpu.getTaskInCpu().setRelativeDeadline(cpu.getTaskInCpu().getRelativeDeadline() - 1);
+            if (cpu.getTaskInCpu().getRelativeDeadline() <= 0 && hasDeadline) {
+                GraphicManager.addLostDeadline(time, cpu.getTaskInCpu().getIndex());
+                System.out.println("PERDA DE DEADLINE!");
+            }
         }
 
         for (Task task : readyQueue) {
             waitingTime[task.getIndex()]++;
+
+            task.setRelativeDeadline(task.getRelativeDeadline() - 1);
+            if (task.getRelativeDeadline() <= 0 && hasDeadline) {
+                GraphicManager.addLostDeadline(time, cpu.getTaskInCpu().getIndex());
+                System.out.println("PERDA DE DEADLINE");
+            }
         }
 
         return isComputing;

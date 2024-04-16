@@ -25,6 +25,12 @@ public class GraphicManager {
         lastTime = time * 4;
     }
 
+    public static void addLostDeadline(int time, int processNumber) {
+        if (processNumber != -1) {
+            canvas[processNumber][time * 4] = "!";
+        }
+    }
+
     public void draw() {
         int process = 1;
         int time = 0;
@@ -41,8 +47,6 @@ public class GraphicManager {
                 if (i < height - 3) {
                     if (canvas[i][j] == null) {
                         canvas[i][j] = ".";
-                    } else {
-                        canvas[i][j] = "+";
                     }
                 } else if (i == height - 3) {
                     canvas[i][j] = "-";

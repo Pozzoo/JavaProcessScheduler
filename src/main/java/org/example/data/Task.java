@@ -7,14 +7,7 @@ public class Task {
     private int quantum;
     private int deadline;
     private int index;
-
-    public Task(int offset, int computation_time, int period_time, int quantum, int deadline) {
-        this.offset = offset;
-        this.computation_time = computation_time;
-        this.period_time = period_time;
-        this.quantum = quantum;
-        this.deadline = deadline;
-    }
+    private int relativeDeadline;
 
     public Task(int offset, int computation_time, int period_time, int quantum, int deadline, int index) {
         this.offset = offset;
@@ -23,6 +16,7 @@ public class Task {
         this.quantum = quantum;
         this.deadline = deadline;
         this.index = index;
+        this.relativeDeadline = deadline;
     }
 
     public int getOffset() {
@@ -71,6 +65,14 @@ public class Task {
 
     public void setIndex(int index) {
         this.index = index;
+    }
+
+    public int getRelativeDeadline() {
+        return relativeDeadline;
+    }
+
+    public void setRelativeDeadline(int relativeDeadline) {
+        this.relativeDeadline = relativeDeadline;
     }
 
     public Task cloneTask() {
