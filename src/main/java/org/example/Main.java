@@ -3,7 +3,6 @@ package org.example;
 import org.example.managers.GraphicManager;
 import org.example.managers.JsonManager;
 import org.example.managers.SimulationManager;
-import org.example.data.OutputLog;
 import org.example.data.SimulationSpecs;
 
 public class Main {
@@ -18,9 +17,8 @@ public class Main {
         SimulationSpecs simulation2 = jsonManager.ReadJsonFile("src/main/java/org/example/exemplo_edf.json");
 
         GraphicManager graphicManager = new GraphicManager(simulation2);
-        OutputLog outputLog = simulationManager.startSimulation(simulation2);
+        simulationManager.startSimulation(simulation2);
 
-        System.out.println(outputLog);
         System.out.println(" ");
 
         graphicManager.draw();

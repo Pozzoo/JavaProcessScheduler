@@ -1,7 +1,6 @@
 package org.example.managers;
 
 import org.example.Cpu;
-import org.example.data.OutputLog;
 import org.example.data.SimulationSpecs;
 import org.example.data.Task;
 
@@ -18,7 +17,7 @@ public class SimulationManager {
         this.cpu = new Cpu();
     }
 
-    public OutputLog startSimulation(SimulationSpecs specs) {
+    public void startSimulation(SimulationSpecs specs) {
 
         int simulationTime = specs.simulation_time();
         boolean isComputing = false;
@@ -29,18 +28,15 @@ public class SimulationManager {
         warmupSimulation(tasks);
 
         switch (specs.scheduler_name().toLowerCase().replace(" ", "")) {
-            case "firstcomefirstserve", "fcfs" -> {return fcfs(specs, simulationTime, isComputing, tasks, readyQueue);}
+            case "firstcomefirstserve", "fcfs" -> fcfs(specs, simulationTime, isComputing, tasks, readyQueue);
 
-            case "roundrobin", "rr" -> { return roundRobin(specs, simulationTime, isComputing, tasks, readyQueue); }
+            case "roundrobin", "rr" -> roundRobin(specs, simulationTime, isComputing, tasks, readyQueue);
 
-            case "ratemonotonic", "rm" -> { return  rateMonotonic(specs, simulationTime, isComputing, tasks, readyQueue); }
+            case "ratemonotonic", "rm" -> rateMonotonic(specs, simulationTime, isComputing, tasks, readyQueue);
 
-            case "earliestdeadlinefirst", "edf" -> { return earliestDeadlineFirst(specs, simulationTime, isComputing, tasks, readyQueue); }
+            case "earliestdeadlinefirst", "edf" -> earliestDeadlineFirst(specs, simulationTime, isComputing, tasks, readyQueue);
 
-            default -> {
-                System.out.println("Escalonador Inválido");
-                return null;
-            }
+            default -> System.out.println("Escalonador Inválido");
         }
 
     }
@@ -57,7 +53,7 @@ public class SimulationManager {
         }
     }
 
-    private OutputLog fcfs(SimulationSpecs specs, int simulationTime, boolean isComputing, List<Task> tasks, List<Task> readyQueue) {
+    private void fcfs(SimulationSpecs specs, int simulationTime, boolean isComputing, List<Task> tasks, List<Task> readyQueue) {
         for (int i = 0; i < simulationTime; i++) {
             for (Task task : tasks) {
                 if (i == task.getOffset() || ((i - task.getOffset()) % task.getPeriod_time()) == 0) {
@@ -67,14 +63,12 @@ public class SimulationManager {
 
             System.out.println("time: " + i);
             isComputing = step(readyQueue, isComputing, false, false, false, i);
-
-            System.out.println("---");
         }
 
-        return logInfo(specs, tasks);
+        logInfo(specs, tasks);
     }
 
-    private OutputLog roundRobin(SimulationSpecs specs, int simulationTime, boolean isComputing, List<Task> tasks, List<Task> readyQueue) {
+    private void roundRobin(SimulationSpecs specs, int simulationTime, boolean isComputing, List<Task> tasks, List<Task> readyQueue) {
         for (int i = 0; i < simulationTime; i++) {
             for (Task task : tasks) {
                 if (i == task.getOffset() || (i - task.getOffset() % task.getPeriod_time()) == 0) {
@@ -86,10 +80,10 @@ public class SimulationManager {
             isComputing = step(readyQueue, isComputing, true, false, false, i);
         }
 
-        return logInfo(specs, tasks);
+        logInfo(specs, tasks);
     }
 
-    private OutputLog rateMonotonic(SimulationSpecs specs, int simulationTime, boolean isComputing, List<Task> tasks, List<Task> readyQueue) {
+    private void rateMonotonic(SimulationSpecs specs, int simulationTime, boolean isComputing, List<Task> tasks, List<Task> readyQueue) {
         float systemUtilization = 0;
 
         for (Task task : tasks) {
@@ -98,7 +92,7 @@ public class SimulationManager {
 
         if (systemUtilization > (specs.tasks_number() * (Math.pow(2, ((double) 1 / specs.tasks_number()) - 1)))) {
             System.out.println("Não Escalonavel");
-            return logInfo(specs, tasks);
+            return;
 
         } else {
 
@@ -118,10 +112,10 @@ public class SimulationManager {
         }
 
 
-        return logInfo(specs, tasks);
+        logInfo(specs, tasks);
     }
 
-    private OutputLog earliestDeadlineFirst(SimulationSpecs specs, int simulationTime, boolean isComputing, List<Task> tasks, List<Task> readyQueue) {
+    private void earliestDeadlineFirst(SimulationSpecs specs, int simulationTime, boolean isComputing, List<Task> tasks, List<Task> readyQueue) {
         float systemUtilization = 0;
 
         for (Task task : tasks) {
@@ -130,7 +124,7 @@ public class SimulationManager {
 
         if (systemUtilization > 1) {
             System.out.println("Não Escalonavel");
-            return logInfo(specs, tasks);
+            return;
         } else {
 
             boolean preempt;
@@ -148,7 +142,7 @@ public class SimulationManager {
         }
 
 
-        return logInfo(specs, tasks);
+        logInfo(specs, tasks);
     }
 
     private void addToList(List<Task> readyQueue, int i, Task task) {
@@ -220,7 +214,9 @@ public class SimulationManager {
         return isComputing;
     }
 
-    private OutputLog logInfo(SimulationSpecs specs, List<Task> tasks) {
+    private void logInfo(SimulationSpecs specs, List<Task> tasks) {
+        System.out.println(" ");
+
         float utilization = ((float) cpuTime / specs.simulation_time()) * 100;
         float productivity = (float) specs.tasks_number() / specs.simulation_time();
 
@@ -229,12 +225,24 @@ public class SimulationManager {
 
         for (int i = 0; i < specs.tasks_number(); i++) {
             waitingTimeSum += waitingTime[i];
-            turnAroundTimeSum += turnAroundTime[i];
+            turnAroundTimeSum += turnAroundTime[i] + waitingTime[i];
+
+            System.out.println("waiting time for task " + (i + 1) + ": " + waitingTime[i]);
+            System.out.println("turn around time for task " + (i + 1) + ": " + (turnAroundTime[i] + waitingTime[i]));
+
+            if (turnAroundTime[i] + waitingTime[i] >= specs.simulation_time()) {
+                System.out.println("starvation for task " + (i + 1));
+            }
+            System.out.println("-------------------------------------");
+
+
         }
 
         averageWaitingTime = waitingTimeSum / tasks.size();
         averageTurnAroundTime = turnAroundTimeSum / tasks.size();
 
-        return new OutputLog(utilization, productivity, averageWaitingTime, averageTurnAroundTime);
+        System.out.println("utilization: " + utilization + ", productivity: " + productivity + ", averageWaitingTime: " + averageWaitingTime + ", averageTurnAroundTime: " + averageTurnAroundTime);
+
+
     }
 }
