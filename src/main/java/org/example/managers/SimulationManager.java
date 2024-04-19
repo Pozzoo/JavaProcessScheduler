@@ -12,6 +12,8 @@ public class SimulationManager {
     private int cpuTime;
     private int[] waitingTime;
     private int[] turnAroundTime;
+    private int[] activationQuantity;
+    private int[] lostDeadlineQuantity;
 
     public SimulationManager() {
         this.cpu = new Cpu();
@@ -45,6 +47,8 @@ public class SimulationManager {
         cpuTime = 0;
         waitingTime = new int[tasks.size()];
         turnAroundTime = new int[tasks.size()];
+        activationQuantity = new int[tasks.size()];
+        lostDeadlineQuantity = new int[tasks.size()];
 
 
         for (int i = 0; i < tasks.size(); i++) {
@@ -55,13 +59,7 @@ public class SimulationManager {
 
     private void fcfs(SimulationSpecs specs, int simulationTime, boolean isComputing, List<Task> tasks, List<Task> readyQueue) {
         for (int i = 0; i < simulationTime; i++) {
-            for (Task task : tasks) {
-                if (i == task.getOffset() || ((i - task.getOffset()) % task.getPeriod_time()) == 0) {
-                    readyQueue.add(task.cloneTask());
-                }
-            }
-
-            System.out.println("time: " + i);
+            nonPreemptiveAddToList(tasks, readyQueue, i);
             isComputing = step(readyQueue, isComputing, false, false, false, i);
         }
 
@@ -70,17 +68,22 @@ public class SimulationManager {
 
     private void roundRobin(SimulationSpecs specs, int simulationTime, boolean isComputing, List<Task> tasks, List<Task> readyQueue) {
         for (int i = 0; i < simulationTime; i++) {
-            for (Task task : tasks) {
-                if (i == task.getOffset() || (i - task.getOffset() % task.getPeriod_time()) == 0) {
-                    readyQueue.add(task.cloneTask());
-                }
-            }
-
-            System.out.println("time: " + i);
+            nonPreemptiveAddToList(tasks, readyQueue, i);
             isComputing = step(readyQueue, isComputing, true, false, false, i);
         }
 
         logInfo(specs, tasks);
+    }
+
+    private void nonPreemptiveAddToList(List<Task> tasks, List<Task> readyQueue, int i) {
+        for (Task task : tasks) {
+            if (i == task.getOffset() || ((i - task.getOffset()) % task.getPeriod_time()) == 0) {
+                readyQueue.add(task.cloneTask());
+                activationQuantity[task.getIndex()]++;
+            }
+        }
+
+        System.out.println("time: " + i);
     }
 
     private void rateMonotonic(SimulationSpecs specs, int simulationTime, boolean isComputing, List<Task> tasks, List<Task> readyQueue) {
@@ -100,7 +103,7 @@ public class SimulationManager {
 
             for (int i = 0; i < simulationTime; i++) {
                 for (Task task : tasks) {
-                    addToList(readyQueue, i, task);
+                    preemptiveAddToList(readyQueue, i, task);
                 }
 
                 preempt = !readyQueue.isEmpty() && cpu.getTaskInCpu() != null && readyQueue.getFirst().getDeadline() < cpu.getTaskInCpu().getDeadline();
@@ -131,7 +134,7 @@ public class SimulationManager {
 
             for (int i = 0; i < simulationTime; i++) {
                 for (Task task : tasks) {
-                    addToList(readyQueue, i, task);
+                    preemptiveAddToList(readyQueue, i, task);
                 }
 
                 preempt = !readyQueue.isEmpty() && cpu.getTaskInCpu() != null && readyQueue.getFirst().getRelativeDeadline() < cpu.getTaskInCpu().getRelativeDeadline();
@@ -145,16 +148,18 @@ public class SimulationManager {
         logInfo(specs, tasks);
     }
 
-    private void addToList(List<Task> readyQueue, int i, Task task) {
+    private void preemptiveAddToList(List<Task> readyQueue, int i, Task task) {
         boolean addedToList = false;
 
         if (i == task.getOffset() || (((i + 1) - task.getOffset()) % task.getPeriod_time()) == 0) {
             if (readyQueue.isEmpty()) {
                 readyQueue.add(task.cloneTask());
+                activationQuantity[task.getIndex()]++;
             } else {
                 for (int j = 0; j < readyQueue.size(); j++) {
                     if (task.getPeriod_time() < readyQueue.get(j).getPeriod_time()) {
                         readyQueue.add(j, task.cloneTask());
+                        activationQuantity[task.getIndex()]++;
                         addedToList = true;
                         break;
                     }
@@ -162,6 +167,7 @@ public class SimulationManager {
 
                 if (!addedToList) {
                     readyQueue.add(task.cloneTask());
+                    activationQuantity[task.getIndex()]++;
                 }
             }
         }
@@ -169,7 +175,6 @@ public class SimulationManager {
 
     private boolean step(List<Task> readyQueue, boolean isComputing, boolean hasQuantum, boolean preempt, boolean hasDeadline, int time) {
         if (!readyQueue.isEmpty() || cpu.getTaskInCpu() != null) {
-
             if (!isComputing || preempt) {
                 if (cpu.getTaskInCpu() != null && cpu.getTaskInCpu().getComputation_time() != 0) {
                     readyQueue.add(cpu.getTaskInCpu());
@@ -180,37 +185,38 @@ public class SimulationManager {
                     isComputing = cpu.compute(readyQueue.getFirst(), hasQuantum, preempt);
                     readyQueue.removeFirst();
                 } else {
-                    System.out.println("    task In CPU: null");
-                    GraphicManager.addPoint(time + 1, -1);
+                    isComputing = cpu.compute(cpu.getTaskInCpu(), hasQuantum, preempt);
                 }
             } else {
                 isComputing = cpu.compute(cpu.getTaskInCpu(), hasQuantum, false);
             }
-
-            cpuTime++;
-            GraphicManager.addPoint(time + 1, cpu.getTaskInCpu().getIndex());
         }
 
         if (cpu.getTaskInCpu() != null) {
             turnAroundTime[cpu.getTaskInCpu().getIndex()]++;
 
+            GraphicManager.addPoint(time + 1, cpu.getTaskInCpu().getIndex());
+            cpuTime++;
+
             cpu.getTaskInCpu().setRelativeDeadline(cpu.getTaskInCpu().getRelativeDeadline() - 1);
-            if (cpu.getTaskInCpu().getRelativeDeadline() <= 0 && hasDeadline) {
+            if (cpu.getTaskInCpu().getRelativeDeadline() == 0 && hasDeadline) {
                 GraphicManager.addLostDeadline(time, cpu.getTaskInCpu().getIndex());
-                System.out.println("PERDA DE DEADLINE!");
+                lostDeadlineQuantity[cpu.getTaskInCpu().getIndex()]++;
             }
+        } else {
+            System.out.println("    task In CPU: null");
+            GraphicManager.addPoint(time + 1, -1);
         }
 
         for (Task task : readyQueue) {
             waitingTime[task.getIndex()]++;
 
             task.setRelativeDeadline(task.getRelativeDeadline() - 1);
-            if (task.getRelativeDeadline() <= 0 && hasDeadline) {
+            if (task.getRelativeDeadline() == 0 && hasDeadline) {
                 GraphicManager.addLostDeadline(time, cpu.getTaskInCpu().getIndex());
-                System.out.println("PERDA DE DEADLINE");
+                lostDeadlineQuantity[task.getIndex()]++;
             }
         }
-
         return isComputing;
     }
 
@@ -223,20 +229,40 @@ public class SimulationManager {
         float averageWaitingTime, waitingTimeSum = 0;
         float averageTurnAroundTime, turnAroundTimeSum = 0;
 
+        int longestWaitingTime = 0, longestIndex = 0;
+        int shortestWaitingTime = specs.simulation_time() + 5, shortestIndex = 0;
+
         for (int i = 0; i < specs.tasks_number(); i++) {
             waitingTimeSum += waitingTime[i];
             turnAroundTimeSum += turnAroundTime[i] + waitingTime[i];
 
+            System.out.println("activations for task " + (i + 1) + ": " + activationQuantity[i]);
             System.out.println("waiting time for task " + (i + 1) + ": " + waitingTime[i]);
             System.out.println("turn around time for task " + (i + 1) + ": " + (turnAroundTime[i] + waitingTime[i]));
 
             if (turnAroundTime[i] + waitingTime[i] >= specs.simulation_time()) {
                 System.out.println("starvation for task " + (i + 1));
             }
+
+            if (lostDeadlineQuantity[i] != 0) {
+                System.out.println("lost deadline for task " + (i + 1));
+                System.out.println("lost deadline ratio: " + ((float) lostDeadlineQuantity[i] / activationQuantity[i]));
+            }
             System.out.println("-------------------------------------");
 
+            if (longestWaitingTime < waitingTime[i]) {
+                longestWaitingTime = waitingTime[i];
+                longestIndex = i;
+            }
 
+            if (shortestWaitingTime > waitingTime[i]) {
+                shortestWaitingTime = waitingTime[i];
+                shortestIndex = i;
+            }
         }
+
+        System.out.println("task " + (longestIndex + 1) + " had the longest waiting time: " + longestWaitingTime);
+        System.out.println("task " + (shortestIndex + 1) + " had the shortest waiting time: " + shortestWaitingTime);
 
         averageWaitingTime = waitingTimeSum / tasks.size();
         averageTurnAroundTime = turnAroundTimeSum / tasks.size();
