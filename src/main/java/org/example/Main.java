@@ -16,8 +16,8 @@ public class Main {
         SimulationSpecs simulation1 = jsonManager.ReadJsonFile("src/main/java/org/example/exemplo_rm.json");
         SimulationSpecs simulation2 = jsonManager.ReadJsonFile("src/main/java/org/example/exemplo_edf.json");
 
-        GraphicManager graphicManager = new GraphicManager(simulation2);
-        simulationManager.startSimulation(simulation2);
+        GraphicManager graphicManager = new GraphicManager(simulation1);
+        simulationManager.startSimulation(simulation1);
 
         System.out.println(" ");
 

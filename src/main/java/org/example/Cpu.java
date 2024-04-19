@@ -10,7 +10,7 @@ public class Cpu {
     public boolean compute(Task task, boolean hasQuantum, boolean preempt) {
 
         if (task != null) {
-            if (computationTime == 0 || quantum == 0 || preempt) {
+            if (computationTime <= 0 || quantum <= 0 || preempt) {
                 task.setComputation_time(task.getComputation_time() - 1);
                 computationTime = task.getComputation_time();
                 quantum = task.getQuantum() - 1;

@@ -11,7 +11,7 @@ public class SimulationManager {
     private final Cpu cpu;
     private int cpuTime;
     private int[] waitingTime;
-    private int[] turnAroundTime;
+    private int[] timeInCpu;
     private int[] activationQuantity;
     private int[] lostDeadlineQuantity;
 
@@ -46,14 +46,13 @@ public class SimulationManager {
     private void warmupSimulation(List<Task> tasks) {
         cpuTime = 0;
         waitingTime = new int[tasks.size()];
-        turnAroundTime = new int[tasks.size()];
+        timeInCpu = new int[tasks.size()];
         activationQuantity = new int[tasks.size()];
         lostDeadlineQuantity = new int[tasks.size()];
 
-
         for (int i = 0; i < tasks.size(); i++) {
             waitingTime[i] = 0;
-            turnAroundTime[i] = 0;
+            timeInCpu[i] = 0;
         }
     }
 
@@ -113,8 +112,6 @@ public class SimulationManager {
 
             }
         }
-
-
         logInfo(specs, tasks);
     }
 
@@ -143,15 +140,20 @@ public class SimulationManager {
                 isComputing = step(readyQueue, isComputing, false, preempt, true, i);
             }
         }
-
-
         logInfo(specs, tasks);
     }
 
     private void preemptiveAddToList(List<Task> readyQueue, int i, Task task) {
         boolean addedToList = false;
 
-        if (i == task.getOffset() || (((i + 1) - task.getOffset()) % task.getPeriod_time()) == 0) {
+        if (i == task.getOffset() || ((i + 1 - task.getOffset()) % task.getPeriod_time()) == 0) {
+
+            System.out.println(task);
+
+            if (i == 348 || i == 349) {
+                System.out.println("asda");
+            }
+
             if (readyQueue.isEmpty()) {
                 readyQueue.add(task.cloneTask());
                 activationQuantity[task.getIndex()]++;
@@ -193,7 +195,7 @@ public class SimulationManager {
         }
 
         if (cpu.getTaskInCpu() != null) {
-            turnAroundTime[cpu.getTaskInCpu().getIndex()]++;
+            timeInCpu[cpu.getTaskInCpu().getIndex()]++;
 
             GraphicManager.addPoint(time + 1, cpu.getTaskInCpu().getIndex());
             cpuTime++;
@@ -234,13 +236,13 @@ public class SimulationManager {
 
         for (int i = 0; i < specs.tasks_number(); i++) {
             waitingTimeSum += waitingTime[i];
-            turnAroundTimeSum += turnAroundTime[i] + waitingTime[i];
+            turnAroundTimeSum += timeInCpu[i] + waitingTime[i];
 
             System.out.println("activations for task " + (i + 1) + ": " + activationQuantity[i]);
             System.out.println("waiting time for task " + (i + 1) + ": " + waitingTime[i]);
-            System.out.println("turn around time for task " + (i + 1) + ": " + (turnAroundTime[i] + waitingTime[i]));
+            System.out.println("turn around time for task " + (i + 1) + ": " + (timeInCpu[i] + waitingTime[i]));
 
-            if (turnAroundTime[i] + waitingTime[i] >= specs.simulation_time()) {
+            if (timeInCpu[i] + waitingTime[i] >= specs.simulation_time()) {
                 System.out.println("starvation for task " + (i + 1));
             }
 
@@ -268,7 +270,5 @@ public class SimulationManager {
         averageTurnAroundTime = turnAroundTimeSum / tasks.size();
 
         System.out.println("utilization: " + utilization + ", productivity: " + productivity + ", averageWaitingTime: " + averageWaitingTime + ", averageTurnAroundTime: " + averageTurnAroundTime);
-
-
     }
 }
