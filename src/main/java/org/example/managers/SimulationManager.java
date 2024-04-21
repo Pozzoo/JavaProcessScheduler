@@ -147,13 +147,6 @@ public class SimulationManager {
         boolean addedToList = false;
 
         if (i == task.getOffset() || ((i + 1 - task.getOffset()) % task.getPeriod_time()) == 0) {
-
-            System.out.println(task);
-
-            if (i == 348 || i == 349) {
-                System.out.println("asda");
-            }
-
             if (readyQueue.isEmpty()) {
                 readyQueue.add(task.cloneTask());
                 activationQuantity[task.getIndex()]++;
@@ -202,8 +195,9 @@ public class SimulationManager {
 
             cpu.getTaskInCpu().setRelativeDeadline(cpu.getTaskInCpu().getRelativeDeadline() - 1);
             if (cpu.getTaskInCpu().getRelativeDeadline() == 0 && hasDeadline) {
-                GraphicManager.addLostDeadline(time, cpu.getTaskInCpu().getIndex());
+                GraphicManager.addLostDeadline(time + 1, cpu.getTaskInCpu().getIndex());
                 lostDeadlineQuantity[cpu.getTaskInCpu().getIndex()]++;
+                System.out.println("Lost deadline: " + cpu.getTaskInCpu().getIndex() + 1);
             }
         } else {
             System.out.println("    task In CPU: null");
@@ -215,8 +209,9 @@ public class SimulationManager {
 
             task.setRelativeDeadline(task.getRelativeDeadline() - 1);
             if (task.getRelativeDeadline() == 0 && hasDeadline) {
-                GraphicManager.addLostDeadline(time, cpu.getTaskInCpu().getIndex());
+                GraphicManager.addLostDeadline(time + 1, task.getIndex());
                 lostDeadlineQuantity[task.getIndex()]++;
+                System.out.println("Lost deadline: " + (task.getIndex() + 1));
             }
         }
         return isComputing;

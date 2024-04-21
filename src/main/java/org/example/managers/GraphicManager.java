@@ -29,6 +29,8 @@ public class GraphicManager {
         if (processNumber != -1) {
             canvas[processNumber][time * 4] = "!";
         }
+
+        lastTime = (time * 4) + 1;
     }
 
     public void draw() {
