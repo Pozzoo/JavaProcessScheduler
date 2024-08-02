@@ -13,11 +13,11 @@ public class Main {
         SimulationManager simulationManager = new SimulationManager();
 
         SimulationSpecs simulation = jsonManager.ReadJsonFile("src/main/java/org/example/exemplo_sched.json");
-        SimulationSpecs simulation1 = jsonManager.ReadJsonFile("src/main/java/org/example/exemplo_rm.json");
+        SimulationSpecs simulation1 = jsonManager.ReadJsonFile("src/main/java/org/example/exemplo_rr.json");
         SimulationSpecs simulation2 = jsonManager.ReadJsonFile("src/main/java/org/example/exemplo_edf.json");
 
-        GraphicManager graphicManager = new GraphicManager(simulation1);
-        simulationManager.startSimulation(simulation1);
+        GraphicManager graphicManager = new GraphicManager(simulation2);
+        simulationManager.startSimulation(simulation2);
 
         System.out.println(" ");
 

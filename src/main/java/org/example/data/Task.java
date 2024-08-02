@@ -23,10 +23,6 @@ public class Task {
         return offset;
     }
 
-    public void setOffset(int offset) {
-        this.offset = offset;
-    }
-
     public int getComputation_time() {
         return computation_time;
     }
@@ -39,24 +35,12 @@ public class Task {
         return period_time;
     }
 
-    public void setPeriod_time(int period_time) {
-        this.period_time = period_time;
-    }
-
     public int getQuantum() {
         return quantum;
     }
 
-    public void setQuantum(int quantum) {
-        this.quantum = quantum;
-    }
-
     public int getDeadline() {
         return deadline;
-    }
-
-    public void setDeadline(int deadline) {
-        this.deadline = deadline;
     }
 
     public int getIndex() {

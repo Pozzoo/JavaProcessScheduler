@@ -1,35 +1,35 @@
 {
-    "simulation_time": 14,
+    "simulation_time": 30,
     "scheduler_name": "fcfs",
     "tasks_number": 4,
     "tasks": [ 
         {
             "offset": 0,
-            "computation_time": 5,
-            "period_time": 14,
-            "quantum": 2,
-            "deadline": 14
+            "computation_time": 4,
+            "period_time": 16,
+            "quantum": 0,
+            "deadline": 0
         },
         {
             "offset": 0,
-            "computation_time": 2,
-            "period_time": 14,
-            "quantum": 2,
-            "deadline": 14
+            "computation_time": 3,
+            "period_time": 18,
+            "quantum": 0,
+            "deadline": 0
         },
         {
             "offset": 1,
-            "computation_time": 4,
-            "period_time": 14,
-            "quantum": 2,
-            "deadline": 14
+            "computation_time": 3,
+            "period_time": 24,
+            "quantum": 0,
+            "deadline": 0
         },
         {
             "offset": 3,
-            "computation_time": 3,
-            "period_time": 14,
-            "quantum": 2,
-            "deadline": 14
+            "computation_time": 4,
+            "period_time": 19,
+            "quantum": 0,
+            "deadline": 0
         }
     ]
 }

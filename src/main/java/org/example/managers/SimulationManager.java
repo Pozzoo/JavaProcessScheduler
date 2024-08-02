@@ -146,7 +146,7 @@ public class SimulationManager {
     private void preemptiveAddToList(List<Task> readyQueue, int i, Task task) {
         boolean addedToList = false;
 
-        if (i == task.getOffset() || ((i + 1 - task.getOffset()) % task.getPeriod_time()) == 0) {
+        if (i == task.getOffset() || ((i - task.getOffset()) % task.getPeriod_time()) == 0) {
             if (readyQueue.isEmpty()) {
                 readyQueue.add(task.cloneTask());
                 activationQuantity[task.getIndex()]++;
@@ -169,14 +169,22 @@ public class SimulationManager {
     }
 
     private boolean step(List<Task> readyQueue, boolean isComputing, boolean hasQuantum, boolean preempt, boolean hasDeadline, int time) {
+
+        for (Task task : readyQueue) {
+            System.out.println(task.toString());
+        }
+
         if (!readyQueue.isEmpty() || cpu.getTaskInCpu() != null) {
             if (!isComputing || preempt) {
-                if (cpu.getTaskInCpu() != null && cpu.getTaskInCpu().getComputation_time() != 0) {
-                    readyQueue.add(cpu.getTaskInCpu());
+
+                if (cpu.getTaskInCpu() != null && cpu.getTaskInCpu().getComputation_time() <= 0) {
+                    if (preempt) readyQueue.add(cpu.getTaskInCpu());
                     cpu.setTaskInCpu(null);
                 }
 
+
                 if (!readyQueue.isEmpty()) {
+                    if (cpu.getTaskInCpu() != null && cpu.getCurrentQuantum() <= 0 && hasQuantum) readyQueue.add(cpu.getTaskInCpu());
                     isComputing = cpu.compute(readyQueue.getFirst(), hasQuantum, preempt);
                     readyQueue.removeFirst();
                 } else {

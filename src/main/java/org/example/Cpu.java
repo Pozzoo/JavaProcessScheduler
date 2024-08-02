@@ -9,17 +9,19 @@ public class Cpu {
 
     public boolean compute(Task task, boolean hasQuantum, boolean preempt) {
 
-        if (task != null) {
-            if (computationTime <= 0 || quantum <= 0 || preempt) {
+        if (computationTime <= 0 || quantum <= 0 || preempt) {
+            if (task != null) {
                 task.setComputation_time(task.getComputation_time() - 1);
                 computationTime = task.getComputation_time();
                 quantum = task.getQuantum() - 1;
                 taskInCpu = task;
             } else {
-                task.setComputation_time(task.getComputation_time() - 1);
-                computationTime -= 1;
-                quantum -= 1;
+                taskInCpu = null;
             }
+        } else {
+            task.setComputation_time(task.getComputation_time() - 1);
+            computationTime = task.getComputation_time();
+            quantum -= 1;
         }
 
         if (!hasQuantum) {
@@ -27,7 +29,8 @@ public class Cpu {
         }
 
         if (taskInCpu != null) {
-            System.out.println("    task In CPU: " + (taskInCpu.getIndex() + 1));
+            System.out.println("    task In CPU: " + (taskInCpu.getIndex()));
+            System.out.println("    " + taskInCpu.getComputation_time());
         }
 
         return computationTime > 0 && quantum > 0;
@@ -39,5 +42,9 @@ public class Cpu {
 
     public void setTaskInCpu(Task taskInCpu) {
         this.taskInCpu = taskInCpu;
+    }
+
+    public int getCurrentQuantum() {
+        return quantum;
     }
 }

@@ -1,21 +1,28 @@
 {
-  "simulation_time": 55,
+  "simulation_time": 16,
   "scheduler_name": "edf",
-  "tasks_number": 2,
+  "tasks_number": 3,
   "tasks": [
     {
       "offset": 0,
-      "computation_time": 10,
-      "period_time": 20,
-      "quantum": 2,
-      "deadline": 20
+      "computation_time": 1,
+      "period_time": 2,
+      "quantum": 0,
+      "deadline": 2
     },
     {
       "offset": 0,
-      "computation_time": 25,
-      "period_time": 50,
-      "quantum": 2,
-      "deadline": 50
+      "computation_time": 1,
+      "period_time": 4,
+      "quantum": 0,
+      "deadline": 4
+    },
+    {
+      "offset": 0,
+      "computation_time": 2,
+      "period_time": 8,
+      "quantum": 0,
+      "deadline": 8
     }
   ]
 }
