@@ -177,11 +177,11 @@ public class SimulationManager {
         if (!readyQueue.isEmpty() || cpu.getTaskInCpu() != null) {
             if (!isComputing || preempt) {
 
+                if (preempt) readyQueue.add(cpu.getTaskInCpu());
+
                 if (cpu.getTaskInCpu() != null && cpu.getTaskInCpu().getComputation_time() <= 0) {
-                    if (preempt) readyQueue.add(cpu.getTaskInCpu());
                     cpu.setTaskInCpu(null);
                 }
-
 
                 if (!readyQueue.isEmpty()) {
                     if (cpu.getTaskInCpu() != null && cpu.getCurrentQuantum() <= 0 && hasQuantum) readyQueue.add(cpu.getTaskInCpu());
@@ -202,7 +202,7 @@ public class SimulationManager {
             cpuTime++;
 
             cpu.getTaskInCpu().setRelativeDeadline(cpu.getTaskInCpu().getRelativeDeadline() - 1);
-            if (cpu.getTaskInCpu().getRelativeDeadline() == 0 && hasDeadline) {
+            if (cpu.getTaskInCpu().getRelativeDeadline() < 0 && hasDeadline) {
                 GraphicManager.addLostDeadline(time + 1, cpu.getTaskInCpu().getIndex());
                 lostDeadlineQuantity[cpu.getTaskInCpu().getIndex()]++;
                 System.out.println("Lost deadline: " + cpu.getTaskInCpu().getIndex() + 1);
@@ -215,12 +215,12 @@ public class SimulationManager {
         for (Task task : readyQueue) {
             waitingTime[task.getIndex()]++;
 
-            task.setRelativeDeadline(task.getRelativeDeadline() - 1);
-            if (task.getRelativeDeadline() == 0 && hasDeadline) {
+            if (task.getRelativeDeadline() < 0 && hasDeadline) {
                 GraphicManager.addLostDeadline(time + 1, task.getIndex());
                 lostDeadlineQuantity[task.getIndex()]++;
                 System.out.println("Lost deadline: " + (task.getIndex() + 1));
             }
+            task.setRelativeDeadline(task.getRelativeDeadline() - 1);
         }
         return isComputing;
     }
@@ -238,8 +238,8 @@ public class SimulationManager {
         int shortestWaitingTime = specs.simulation_time() + 5, shortestIndex = 0;
 
         for (int i = 0; i < specs.tasks_number(); i++) {
-            waitingTimeSum += waitingTime[i];
-            turnAroundTimeSum += timeInCpu[i] + waitingTime[i];
+            waitingTimeSum += ((float) waitingTime[i] / 2);
+            turnAroundTimeSum += (float) (timeInCpu[i] + waitingTime[i]) / 2;
 
             System.out.println("activations for task " + (i + 1) + ": " + activationQuantity[i]);
             System.out.println("waiting time for task " + (i + 1) + ": " + waitingTime[i]);

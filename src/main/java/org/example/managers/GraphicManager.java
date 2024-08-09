@@ -12,7 +12,7 @@ public class GraphicManager {
         width = specs.simulation_time() * 4;
         height = specs.tasks_number() + 3;
 
-        canvas = new String[height][width];
+        canvas = new String[height][width + 1];
     }
 
     public static void addPoint(int time, int processNumber) {

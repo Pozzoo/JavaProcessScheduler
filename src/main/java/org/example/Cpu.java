@@ -30,7 +30,7 @@ public class Cpu {
 
         if (taskInCpu != null) {
             System.out.println("    task In CPU: " + (taskInCpu.getIndex()));
-            System.out.println("    " + taskInCpu.getComputation_time());
+            System.out.println("    " + taskInCpu.toString());
         }
 
         return computationTime > 0 && quantum > 0;
